@@ -21,13 +21,15 @@ class BasketballScoreboard:
 
         self.direction = "Equipo A"  # Inicialmente, la dirección es para el "Equipo A"
 
-        self.periodo=0
+        self.periodo=1
+
+        self.paused = False  # Variable para controlar el estado de pausa
 
         self.create_widgets()
 
     def create_widgets(self):
 
-        self.periodoLabel = tk.Label(self.root, text="Periodo: 0", font=("Arial", 24))
+        self.periodoLabel = tk.Label(self.root, text="Periodo: 1", font=("Arial", 24))
         self.periodoLabel.pack(pady=10)
 
         self.label_team_a = tk.Label(self.root, text="Equipo A: 0", font=("Arial", 24))
@@ -101,8 +103,9 @@ class BasketballScoreboard:
 
     #PERIODO EN CURSO
     def change_periodo(self):
-        self.periodo +=1
-        self.periodoLabel.config(text=f"periodo ({self.periodo})")
+        if self.time_remaining==0:
+            self.periodo +=1
+            self.periodoLabel.config(text=f"periodo ({self.periodo})")
     #     self.update_periodo()
     # def update_periodo(self):
     #     self.config(text=f"Cambiar Dirección ({self.periodo})")
@@ -111,26 +114,31 @@ class BasketballScoreboard:
     def start_pause_timer(self):
         if self.button_start_time["text"] == "Iniciar Tiempo" or self.button_start_time["text"] == "Reanudar Tiempo":
             self.button_start_time["text"] = "Pausa"
+            self.resume_timer()
+        elif self.button_start_time["text"] == "Pausa":
+            self.button_start_time["text"] = "Reanudar Tiempo"
+            self.paused = True  # Pausar el decremento
+
+    def update_time(self):
+        if not self.paused:  # Continuar solo si no está en pausa
             minutes = self.time_remaining // 60
             seconds = self.time_remaining % 60
             time_str = f"{minutes:02d}:{seconds:02d}"
             self.label_time.config(text=f"Tiempo restante: {time_str}")
+
             if self.time_remaining > 0:
                 self.time_remaining -= 1
-                self.root.after(1000, self.update_time)
-        else:
-            self.button_start_time["text"] = "Reanudar Tiempo"
+                self.root.after(1000, self.update_time)  # Llamar recursivamente
+            else:
+                self.button_start_time["text"] == "Iniciar Tiempo"
+                self.time_remaining=600
 
-    def update_time(self):
-        minutes = self.time_remaining // 60
-        seconds = self.time_remaining % 60
-        time_str = f"{minutes:02d}:{seconds:02d}"
-        self.label_time.config(text=f"Tiempo restante: {time_str}")
+    def resume_timer(self):
+        self.paused = False  # Reanudar el decremento
+        self.update_time()  # Reiniciar la actualización del tiempo
 
-        if self.time_remaining > 0:
-            self.time_remaining -= 1
-            self.root.after(1000, self.update_time)
-
+    def stop_timer(self):
+        self.paused = True  # Detener el decremento
 
 root = tk.Tk()
 scoreboard = BasketballScoreboard(root)
